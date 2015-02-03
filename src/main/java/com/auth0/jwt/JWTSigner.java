@@ -15,11 +15,10 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.OperationNotSupportedException;
 
-import org.apache.commons.codec.binary.Base64;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.io.BaseEncoding;
 
 /**
  * JwtSigner implementation based on the Ruby implementation from http://jwt.io
@@ -210,7 +209,7 @@ public class JWTSigner {
      * Safe URL encode a byte array to a String
      */
     private String base64UrlEncode(byte[] str) {
-        return new String(Base64.encodeBase64URLSafe(str));
+        return BaseEncoding.base64Url().omitPadding().encode(str);
     }
 
     /**

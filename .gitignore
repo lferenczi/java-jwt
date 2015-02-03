@@ -1,3 +1,5 @@
+.gradle
+build/
 # Maven Shaded Jar Artifact
 dependency-reduced-pom.xml
 

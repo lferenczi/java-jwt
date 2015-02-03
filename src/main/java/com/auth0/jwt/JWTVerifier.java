@@ -1,24 +1,18 @@
 package com.auth0.jwt;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.codec.binary.Base64;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
 
 /**
  * JWT Java Implementation
@@ -30,7 +24,7 @@ public class JWTVerifier {
     private final byte[] secret;
     private final String audience;
     private final String issuer;
-    private final Base64 decoder = new Base64(true);;
+    private final BaseEncoding decoder = BaseEncoding.base64Url();
 
     private final ObjectMapper mapper;
 
@@ -81,10 +75,11 @@ public class JWTVerifier {
      * @throws JWTVerifyException    when expiration, issuer or audience are invalid
      * @throws IllegalStateException when token's structure is invalid
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> verify(String token)
             throws NoSuchAlgorithmException, InvalidKeyException, IllegalStateException,
             IOException, SignatureException, JWTVerifyException {
-        if (token == null || "".equals(token)) {
+        if (Strings.isNullOrEmpty(token)) {
             throw new IllegalStateException("token not set");
         }
 
@@ -119,7 +114,7 @@ public class JWTVerifier {
         hmac.init(new SecretKeySpec(secret, algorithm));
         byte[] sig = hmac.doFinal(new StringBuilder(pieces[0]).append(".").append(pieces[1]).toString().getBytes());
 
-        if (!MessageDigest.isEqual(sig, decoder.decodeBase64(pieces[2]))) {
+        if (!MessageDigest.isEqual(sig, decoder.decode(pieces[2]))) {
             throw new SignatureException("signature verification failed");
         }
     }
@@ -173,8 +168,7 @@ public class JWTVerifier {
     }
 
     JsonNode decodeAndParse(String b64String) throws IOException {
-        String jsonString = new String(decoder.decodeBase64(b64String), "UTF-8");
-        JsonNode jwtHeader = mapper.readValue(jsonString, JsonNode.class);
-        return jwtHeader;
+        String jsonString = new String(decoder.decode(b64String), "UTF-8");
+        return mapper.readValue(jsonString, JsonNode.class);
     }
 }
